@@ -30,7 +30,17 @@ const fetchNamesAndScores = challengeId =>
 
       const scores = $(".nose")
         .map((i, el) => $(el).text())
-        .get();
+        .get()
+        .map(score => {
+          if (score.includes("mi")) {
+            const miles = parseFloat(score);
+            const km = miles * 1.60934;
+            return `${km.toFixed(2)} km`;
+          } else {
+            return score;
+          }
+        });
+
       const maxScoreLength = _.maxBy(scores, "length").length;
 
       const paddedScores = scores.map(score =>
