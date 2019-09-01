@@ -1,54 +1,39 @@
-const cheerio = require("cheerio");
-const request = require("request");
+const fetch = require("node-fetch");
 const _ = require("lodash");
 
-const fetchNamesAndScores = challengeId =>
+const fetchNamesAndScores = (challengeId, authToken) =>
   new Promise((resolve, reject) => {
-    if (!challengeId) {
-      reject("No challengeId provided");
+    if (!challengeId || !authToken) {
+      reject("No challengeId or authToken provided");
     }
 
-    const url = "https://www.endomondo.com/challenges/" + challengeId;
+    const url = `https://api.mobile.endomondo.com/mobile/api/challenge/get?challengeId=${challengeId}&authToken=${authToken}&fields=leaderboard`;
 
-    request(url, function(error, response, html) {
-      if (error) {
-        return reject(error);
-      }
-
-      var $ = cheerio.load(html);
-
-      var names = $("td .name")
-        .map((index, el) => {
-          return $(el).text();
-        })
-        .get();
-
-      const maxNameLength = _.maxBy(names, "length").length;
-
-      // Pad names so scores right align
-      const paddedNames = names.map(name => _.padEnd(name, maxNameLength));
-
-      const scores = $(".nose")
-        .map((i, el) => $(el).text())
-        .get()
-        .map(score => {
-          if (score.includes("mi")) {
-            const miles = parseFloat(score);
-            const km = miles * 1.60934;
-            return `${km.toFixed(2)} km`;
-          } else {
-            return score;
-          }
+    fetch(url)
+      .then(resp => resp.json())
+      .then(({ ranks }) => {
+        const names = ranks.map(rank => {
+          return rank.from.name;
         });
 
-      const maxScoreLength = _.maxBy(scores, "length").length;
+        const maxNameLength = _.maxBy(names, "length").length;
 
-      const paddedScores = scores.map(score =>
-        _.padStart(score, maxScoreLength)
-      );
+        // Pad names so scores right align
+        const paddedNames = names.map(name => _.padEnd(name, maxNameLength));
 
-      resolve(_.zip(paddedNames, paddedScores));
-    });
+        const scores = ranks.map(rank => rank.value + " km");
+
+        const maxScoreLength = _.maxBy(scores, "length").length;
+
+        const paddedScores = scores.map(score =>
+          _.padStart(score, maxScoreLength)
+        );
+
+        resolve(_.zip(paddedNames, paddedScores));
+      })
+      .catch(error => {
+        console.log(error);
+      });
   });
 
 exports.fetchNamesAndScores = fetchNamesAndScores;

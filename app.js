@@ -9,13 +9,14 @@ const writeFile = promisify(fs.writeFile);
 
 var SLACK_URL_TOKEN = process.env.SLACK_URL_TOKEN;
 var CHALLENGE_ID = process.env.CHALLENGE_ID;
+var AUTH_TOKEN = process.env.AUTH_TOKEN;
 
 const formatBody = list => "```" + list.map(item => `${_.padStart(item.position, 2)}: ${item.name} - ${item.score} - ${item.change}`).join("\n") + "```";
 
 const fileName = __dirname + "/last.json";
 console.log(fileName);
 
-fetchNamesAndScores(CHALLENGE_ID).then(namesAndScores => {
+fetchNamesAndScores(CHALLENGE_ID, AUTH_TOKEN).then(namesAndScores => {
   console.log(namesAndScores)
 
   const list = namesAndScores.map(
