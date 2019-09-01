@@ -21,7 +21,7 @@ const fetchNamesAndScores = (challengeId, authToken) =>
         // Pad names so scores right align
         const paddedNames = names.map(name => _.padEnd(name, maxNameLength));
 
-        const scores = ranks.map(rank => rank.value + " km");
+        const scores = ranks.map(rank => (Math.floor(rank.value * 100) / 100) + " km");
 
         const maxScoreLength = _.maxBy(scores, "length").length;
 
